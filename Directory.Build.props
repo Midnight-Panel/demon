@@ -8,5 +8,7 @@
     <Authors>Midnight-Panel</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- English only: no localized framework/package messages -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 </Project>

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Midnight.Demon/Midnight.Demon.csproj" />
+    <Project Path="../panel/src/Midnight.Shared/Midnight.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Midnight.Demon.Tests/Midnight.Demon.Tests.csproj" />
+  </Folder>
+</Solution>
