@@ -1,0 +1,20 @@
+[Unit]
+Description=Midnight Daemon
+Documentation=https://github.com/Midnight-Panel/demon
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=notify
+ExecStart=/usr/local/bin/midnight-daemon
+Environment=MIDNIGHT_DAEMON_CONFIG=/etc/midnight/config.json
+WorkingDirectory=/var/lib/midnight
+Restart=on-failure
+RestartSec=5
+# Needs the docker socket and has to manage server files of all containers
+User=root
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target
