@@ -226,3 +226,23 @@ public class ContainerStatsTests
         Assert.Equal(0, ContainerUsage.CalculateMemoryBytes(null));
     }
 }
+
+public class ImagePullErrorTests
+{
+    [Theory]
+    [InlineData("error from registry: unauthorized\nunauthorized")]
+    [InlineData("pull access denied for midnight/nope, repository does not exist")]
+    [InlineData("manifest unknown")]
+    public void MissingOrPrivateImagesNameTheImage(string error)
+    {
+        var message = Midnight.Demon.Features.Docker.DockerService.DescribePullError("ghcr.io/midnight-panel/installers:alpine", error);
+
+        Assert.StartsWith("The docker image ghcr.io/midnight-panel/installers:alpine does not exist or is not public", message);
+        Assert.DoesNotContain("\n", message);
+    }
+
+    [Fact]
+    public void OtherErrorsKeepTheirMessage()
+        => Assert.Equal("Pulling node:22-alpine failed: no space left on device",
+            Midnight.Demon.Features.Docker.DockerService.DescribePullError("node:22-alpine", "no space left on device\n"));
+}

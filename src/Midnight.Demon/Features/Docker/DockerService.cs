@@ -44,6 +44,19 @@ public class DockerService : IDisposable
     }
 
     /// <summary>Pulls the image when it is not available locally. <paramref name="onStatus"/> gets the pull status lines (without progress bars).</summary>
+    /// <summary>
+    /// Registries answer "unauthorized" / "denied" for images that don't exist as well as for private ones,
+    /// the raw message gives no hint which image of the shard is the problem
+    /// </summary>
+    internal static string DescribePullError(string image, string error)
+    {
+        string[] missing = ["unauthorized", "denied", "manifest unknown", "not found", "does not exist"];
+
+        return missing.Any(m => error.Contains(m, StringComparison.OrdinalIgnoreCase))
+            ? $"The docker image {image} does not exist or is not public, check the docker images of the shard (registry: {error.Trim().Split('\n')[0]})"
+            : $"Pulling {image} failed: {error.Trim()}";
+    }
+
     public async Task EnsureImageAsync(string image, Action<string>? onStatus, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(image))
@@ -74,10 +87,17 @@ public class DockerService : IDisposable
                 onStatus?.Invoke(string.IsNullOrEmpty(message.ID) ? message.Status : $"{message.ID}: {message.Status}");
         });
 
-        await Client.Images.CreateImageAsync(new ImagesCreateParameters { FromImage = reference.Repository, Tag = reference.Tag }, null, progress, cancellationToken);
+        try
+        {
+            await Client.Images.CreateImageAsync(new ImagesCreateParameters { FromImage = reference.Repository, Tag = reference.Tag }, null, progress, cancellationToken);
+        }
+        catch (DockerApiException e)
+        {
+            throw new InvalidOperationException(DescribePullError(image, e.ResponseBody is { Length: > 0 } body ? body : e.Message), e);
+        }
 
         if (error != null)
-            throw new InvalidOperationException($"Pulling {image} failed: {error}");
+            throw new InvalidOperationException(DescribePullError(image, error));
 
         _logger.LogInformation("Pulled image {Image}", image);
     }
