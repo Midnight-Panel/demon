@@ -707,6 +707,14 @@ public sealed class ServerInstance
         }
     }
 
+    /// <summary>Exit code 0 means the program finished by itself (e.g. a script), that is no crash</summary>
+    internal static string DescribeUnexpectedExit(long exitCode, bool oomKilled) => (exitCode, oomKilled) switch
+    {
+        (_, true) => $"The server crashed (exit code {exitCode}, out of memory)",
+        (0, _) => "The server process finished on its own (exit code 0)",
+        _ => $"The server crashed (exit code {exitCode})"
+    };
+
     private void OnContainerExited(RunningContainer running, long exitCode, bool oomKilled)
     {
         bool crashed;
@@ -727,7 +735,7 @@ public sealed class ServerInstance
         _logger.LogInformation("Server {Uuid} exited with code {ExitCode}", Uuid, exitCode);
 
         if (crashed)
-            Notice(oomKilled ? $"The server crashed (exit code {exitCode}, out of memory)" : $"The server crashed (exit code {exitCode})");
+            Notice(DescribeUnexpectedExit(exitCode, oomKilled));
 
         lock (_stateLock)
         {

@@ -248,3 +248,14 @@ public class ImagePullErrorTests
         => Assert.Equal("Pulling node:22-alpine failed: no space left on device",
             Midnight.Demon.Features.Docker.DockerService.DescribePullError("node:22-alpine", "no space left on device\n"));
 }
+
+public class ExitNoticeTests
+{
+    [Theory]
+    [InlineData(0, false, "The server process finished on its own (exit code 0)")]
+    [InlineData(1, false, "The server crashed (exit code 1)")]
+    [InlineData(137, true, "The server crashed (exit code 137, out of memory)")]
+    [InlineData(0, true, "The server crashed (exit code 0, out of memory)")]
+    public void ExitCodeZeroIsNoCrash(long exitCode, bool oomKilled, string expected)
+        => Assert.Equal(expected, Midnight.Demon.Features.Servers.ServerInstance.DescribeUnexpectedExit(exitCode, oomKilled));
+}
