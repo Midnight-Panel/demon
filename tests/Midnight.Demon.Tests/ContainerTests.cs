@@ -233,12 +233,14 @@ public class ImagePullErrorTests
     [InlineData("error from registry: unauthorized\nunauthorized")]
     [InlineData("pull access denied for midnight/nope, repository does not exist")]
     [InlineData("manifest unknown")]
+    [InlineData("{\"message\":\"error from registry: unauthorized\\nunauthorized\"}")]
     public void MissingOrPrivateImagesNameTheImage(string error)
     {
         var message = Midnight.Demon.Features.Docker.DockerService.DescribePullError("ghcr.io/midnight-panel/installers:alpine", error);
 
         Assert.StartsWith("The docker image ghcr.io/midnight-panel/installers:alpine does not exist or is not public", message);
         Assert.DoesNotContain("\n", message);
+        Assert.DoesNotContain("{", message);
     }
 
     [Fact]

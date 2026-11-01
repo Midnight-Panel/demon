@@ -50,6 +50,21 @@ public class DockerService : IDisposable
     /// </summary>
     internal static string DescribePullError(string image, string error)
     {
+        // The docker api wraps the registry error as {"message": "..."}
+        if (error.TrimStart().StartsWith('{'))
+        {
+            try
+            {
+                using var json = System.Text.Json.JsonDocument.Parse(error);
+                if (json.RootElement.TryGetProperty("message", out var message) && message.GetString() is { Length: > 0 } text)
+                    error = text;
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // not json after all, keep it as it is
+            }
+        }
+
         string[] missing = ["unauthorized", "denied", "manifest unknown", "not found", "does not exist"];
 
         return missing.Any(m => error.Contains(m, StringComparison.OrdinalIgnoreCase))
